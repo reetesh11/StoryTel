@@ -31,31 +31,6 @@ st.set_page_config(
     layout="wide"
 )
 
-async def create_script(config: VideoConfig):
-    """Create video using the configured agents"""
-    logger.info(f"Starting video creation process for topic: {config.topic}")
-    
-    try:
-        # Initialize agents
-        logger.debug("create_script: Initializing video creation agents")
-
-        script_writer = ScriptWriterAgent(config.dict())
-
-        logger.info("create_script: All agents initialized successfully")
-
-        # Step 2: Generate script
-        logger.info("create_script: Step 1: Generating script")
-        script = await script_writer.run({
-            "topic": config.topic,
-            # "category": classification["category"]
-        })
-        logger.debug(f"create_script: Script generation completed with {len(script['sections'])} sections")
-        
-        return script
-    except Exception as e:
-        logger.error(f"Error in video creation process: {str(e)}", exc_info=True)
-        raise
-
 def display_script_sections(sections: List[VideoSection]):
     """Display script sections in a user-friendly format"""
     if not sections:
@@ -166,7 +141,7 @@ def main():
                 'script': script,
                 'config': config
             }
-            
+
             # Clear the status and progress placeholders
             status_placeholder.empty()
             progress_placeholder.empty()
