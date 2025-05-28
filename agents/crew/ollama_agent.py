@@ -40,7 +40,7 @@ class OllamaAgent(Agent):
         """Make a call to Ollama API with retry logic"""
         start_time = time.time()
         self.performance_metrics["api_calls"] += 1
-        
+        logger.debug(f"Ollama API call triggered with promt {prompt}")
         try:
             response = requests.post(
                 f"{self.llm.openai_api_base}/api/generate",
@@ -58,8 +58,8 @@ class OllamaAgent(Agent):
             response_time = time.time() - start_time
             self.performance_metrics["response_times"].append(response_time)
             self.performance_metrics["total_tokens"] += len(result.split())
-            
             logger.debug(f"Ollama API call completed in {response_time:.2f}s")
+            logger.debug(f"Ollama API call completed and output is {result}")
             return result
             
         except requests.exceptions.Timeout:
