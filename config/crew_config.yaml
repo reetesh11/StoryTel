@@ -1,0 +1,178 @@
+# config/crew_config.yaml
+ollama:
+  base_url: "http://localhost:11434"
+  model: "phi"
+  temperature: 0.7
+  top_p: 0.9
+
+agents:
+  parser:
+    role: "Parse json from a string"
+    goal: "Parse only the json part of the string and leave extra strings"
+    backstory: |
+      You are an expert in understanding json.
+      You know all the opening and closing schema of a json in string
+  researcher:
+    role: "Research Specialist"
+    goal: "Gather comprehensive and accurate information about the topic"
+    backstory: |
+      You are an expert researcher with a keen eye for interesting facts and compelling information.
+      Your job is to find the most engaging and relevant information about any given topic. 
+      You evaluate all important events and incidents related to topic.
+      Your job is to find and evaluate about all the political, geopolictical, historical, economical and religious aspects about the topic.
+    
+  storyteller:
+    role: "Story Structure Specialist"
+    goal: "Create engaging narrative structures for the content"
+    backstory: |
+      You are a master storyteller who knows how to structure information in the most engaging way.
+      You understand pacing, hooks, and narrative arcs for any story and topic.
+      Using the provided reseacrh data, you can create a story structure. 
+    
+  writer:
+    role: "Script Writer"
+    goal: "Write engaging and well-structured YouTube scripts"
+    backstory: |
+      You are an expert YouTube script writer who knows how to create engaging content that keeps viewers watching. 
+      You understand YouTube's best practices and audience engagement. 
+      You understand each aspect of the topic and knows what is the best background music, tone and pacing of the scenes
+    
+  optimizer:
+    role: "Engagement Optimizer"
+    goal: "Optimize the script for maximum viewer engagement"
+    backstory: |
+      You are an expert in YouTube analytics and viewer engagement. 
+      Your job is to ensure the script is optimized for maximum viewer retention and engagement.
+
+tasks:
+  parse:
+    agent: "parser"
+    description: |
+      Focus on the json inside a string. Extract the json from the string. 
+      The expected json format is {format}
+      Example 1:
+      Input:
+      """"
+        These are the numbers for the team
+        {{
+          "ajit": 56,
+          "amit": 87,
+          "neena": 45
+        }}
+        This shows much they have cleared the tickets. Happy to help you more.
+      """"
+      Expected out:
+      """"
+        {{
+          "ajit": 56,
+          "amit": 87,
+          "neena": 45
+        }}
+      """"
+      You can see how extra text outside the json object is removed.
+
+  research:
+    agent: "researcher"
+    description: |
+      Research the topic: {topic}
+      Focus on these items 
+      1. Key facts and information
+      2. Interesting angles and perspectives
+      3. Current relevance and trends
+      4. Potential hooks and engagement points
+      
+      Your task is to format information collected into a JSON with the following structure:
+      {{
+          "key_facts": [],
+          "interesting_angles": [],
+          "current_relevance": [],
+          "potential_hooks": []
+      }}
+      Observe how all the informations are categorised in different buckets of information.
+      Please provide your response in a clear and structured format.
+
+  structure:
+    agent: "storyteller"
+    description: |
+      Create a narrative structure for the topic: {topic} using the information provided above. 
+
+      You can utlizie the above information or add extra things to do justice to the topic.
+      Oevrall structure of the output should include these atleast. You can add few pointers also if you feel like to justife the topic:
+      1. Introduction
+      2. Main sections with key points
+      3. Supporting evidence for each point
+      4. Conclusion
+      
+      Format the output as a JSON with the following structure:
+      {{
+          "hook": "",
+          "main_sections": [],
+          "transitions": [],
+          "conclusion": ""
+      }}
+      
+      Please provide your response in a clear and structured format.
+    output: |
+      {{
+          "hook": "",
+          "main_sections": [],
+          "transitions": [],
+          "conclusion": ""
+      }}
+
+    context: "Use the research findings to create a compelling structure"    
+  writing:
+    agent: "writer"
+    description: |
+      Write a script for the topic: {topic} using the structure given above.
+      Use hooks, main_sections, transisitions and conclusion of the above structure and convert that into a script with sections.
+      The complete story should be conveyed from sections and whole story could be of 5 minutes for youtube users.
+      Each section should have title, content, duration, engagement_hooks, tone and visual_hints.
+      
+      For each section:
+      1. Write engaging content
+      2. Include all key points from the structure
+      3. Add appropriate transitions
+      4. Maintain narrative flow
+      
+      Using above, create list of sections and each section could a small story or information.
+      You can consider section as one frame scene, or a slide for presentation or a small story for a picture
+      
+      Follow the provided structure exactly.
+
+    context: "Use the provided structure to write the script"
+    output: |
+      {{
+          "sections": [
+              {{
+                  "title": "",
+                  "content": "",
+                  "duration": 0,
+                  "engagement_hooks": [],
+                  "tone": "",
+                  "visual_hints": []
+              }}
+          ],
+      }}
+    
+  optimization:
+    description: "Optimize the script for maximum engagement"
+    agent: "optimizer"
+    description: |
+      Optimize the script for maximum engagement.
+      Consider:
+      1. Hook strength
+      2. Content clarity
+      3. Engagement potential
+      4. Visual appeal
+      
+      Format the output as a JSON with the following structure:
+      {{
+          "optimized_script": {{}},
+          "metrics": {{
+              "hook_strength": 0.0,
+              "content_clarity": 0.0,
+              "engagement_potential": 0.0,
+              "visual_appeal": 0.0
+          }}
+      }}

@@ -5,16 +5,17 @@ import asyncio
 from typing import List
 import uuid
 from datetime import datetime
+from dotenv import load_dotenv
 
 # Add the project root directory to Python path
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
 
-from agents import (
-    ScriptWriterAgent,
-)
+# from agents import ScriptWriterAgent
+from services.script_service import ScriptGenerationService
 from config.schema import VideoConfig, VideoSection
 from utils.logger import setup_logger
+from utils.config_loader import load_ollama_config
 
 # Initialize session state for process tracking
 if 'is_processing' not in st.session_state:
@@ -25,32 +26,36 @@ if 'video_path' not in st.session_state:
 # Set up logger
 logger = setup_logger("app")
 
+# Load environment variables
+load_dotenv()
+
 st.set_page_config(
     page_title="AI Video Creator",
     page_icon="🎥",
     layout="wide"
 )
 
-def display_script_sections(sections: List[VideoSection]):
+def display_script_sections(content):
     """Display script sections in a user-friendly format"""
-    if not sections:
+    if not content:
         st.error("No script sections available. Please try again.")
         return
         
     st.subheader("Generated Script")
     
-    try:
-        # Create tabs for each section
-        tabs = st.tabs([section.title for section in sections])
+    st.markdown(content)
+    # try:
+    #     # Create tabs for each section
+    #     tabs = st.tabs([section["title"] for section in sections])
         
-        for tab, section in zip(tabs, sections):
-            with tab:
-                # Display section content with proper formatting
-                st.markdown("---")
-                st.markdown(section.content)
-    except Exception as e:
-        st.error(f"Error displaying script sections: {str(e)}")
-        logger.error(f"Error in display_script_sections: {str(e)}", exc_info=True)
+    #     for tab, section in zip(tabs, sections):
+    #         with tab:
+    #             # Display section content with proper formatting
+    #             st.markdown("---")
+    #             st.markdown(section.content)
+    # except Exception as e:
+    #     st.error(f"Error displaying script sections: {str(e)}")
+    #     logger.error(f"Error in display_script_sections: {str(e)}", exc_info=True)
 
 def run_async(coro):
     """Run an async function in a synchronous context"""
@@ -66,6 +71,16 @@ def main():
     logger.info("Starting AI Video Creator application")
     st.title("🎥 AI Video Creator")
     
+
+    # Load Ollama configuration
+    ollama_config = load_ollama_config()
+    
+    # Set environment variables from config
+    os.environ["OLLAMA_BASE_URL"] = ollama_config.get("base_url", "http://localhost:11434")
+    os.environ["OLLAMA_MODEL"] = ollama_config.get("model", "phi")
+    os.environ["OPENAI_API_KEY"] = "dummy-key"
+
+
     # Initialize session state for search IDs if not exists
     if 'search_id' not in st.session_state:
         st.session_state.search_id = None
@@ -116,10 +131,12 @@ def main():
             
             # Show initial status
             status_placeholder.info("Initializing script generation...")
-            
+            # Initialize the script generation service
+            service = None
             # Initialize agents
             try:
-                script_writer = ScriptWriterAgent(config.dict())
+                # script_writer = ScriptWriterAgent(config.dict())
+                service = ScriptGenerationService()
             except RuntimeError as e:
                 st.error(str(e))
                 st.info("To fix this:\n1. Open a terminal\n2. Run 'ollama serve'\n3. Wait for Ollama to start\n4. Refresh this page")
@@ -128,11 +145,14 @@ def main():
             # Update status
             status_placeholder.info("Generating script content...")
             
-            # Show a spinner while processing
-            with st.spinner("Generating script... This may take a few minutes."):
-                script = run_async(script_writer.run({
-                    "topic": config.topic,
-                }))
+            try:
+                # Show a spinner while processing
+                with st.spinner("Generating script... This may take a few minutes."):
+                    script = run_async(service.generate_script(topic))
+            except Exception as e:
+                script = None
+                logger.error(f"Unable to get the script. Failed due to {e}")
+                raise e
             
             # Store script in session state with search_id
             if 'scripts' not in st.session_state:
@@ -145,9 +165,8 @@ def main():
             # Clear the status and progress placeholders
             status_placeholder.empty()
             progress_placeholder.empty()
-            
             # Display the script
-            display_script_sections(script["sections"])
+            display_script_sections(script)
             
             st.success("Script generated successfully!")
             

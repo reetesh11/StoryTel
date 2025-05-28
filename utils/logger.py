@@ -20,12 +20,12 @@ def setup_logger(name: str, log_file: str = None) -> logging.Logger:
     #     '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     # )
     console_formatter = logging.Formatter(
-        '%(asctime)s - %(levelname)s - %(message)s'
+        '%(asctime)s - %(name)s -  %(levelname)s - %(message)s'
     )
 
     # Create and configure file handler
-    if log_file is None:
-        log_file = f"{name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+    # if log_file is None:
+    #     log_file = f"{name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
     # file_handler = logging.FileHandler(log_dir / log_file)
     # file_handler.setLevel(logging.DEBUG)
     # file_handler.setFormatter(file_formatter)

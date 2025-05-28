@@ -1,3 +1,5 @@
 logs/
 output/
 .env
+data/
+metrics/
